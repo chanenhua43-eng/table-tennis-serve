@@ -138,7 +138,7 @@
   <header class="text-center mb-6">
     <div class="inline-flex items-center gap-2 bg-blue-900 text-white px-4 py-1.5 rounded-full text-sm font-bold mb-2 shadow-sm">
       <span>🏓 體育科數位評量系統</span>
-      <span class="bg-emerald-500 text-slate-950 text-xs px-2 py-0.5 rounded-full">互動預覽版</span>
+      <span class="bg-emerald-500 text-slate-950 text-xs px-2 py-0.5 rounded-full">雲端連線版</span>
     </div>
     <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">桌球技能測驗與等級評量表</h1>
     <p class="text-slate-600 text-sm mt-1">請依序完成「對打測驗」與「發球動作及落點」評量</p>
@@ -417,28 +417,51 @@
           </div>
         </div>
 
+        <!-- 失誤與犯規 0 分快捷按鈕列 -->
+        <div class="flex flex-wrap items-center justify-center gap-3 my-3">
+          <button type="button" onclick="addServe(0, this, '出界/失誤')"
+            class="px-4 py-2.5 bg-amber-100 hover:bg-amber-200 active:scale-95 text-amber-900 font-bold text-sm rounded-xl border border-amber-300 shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+            <span>❌ 發球出界 / 失誤</span>
+            <span class="bg-amber-800 text-white text-xs px-2 py-0.5 rounded-full">0 分</span>
+          </button>
+          <button type="button" onclick="addServe(0, this, '犯規')"
+            class="px-4 py-2.5 bg-rose-100 hover:bg-rose-200 active:scale-95 text-rose-900 font-bold text-sm rounded-xl border border-rose-300 shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+            <span>⚠️ 發球犯規</span>
+            <span class="bg-rose-700 text-white text-xs px-2 py-0.5 rounded-full">0 分</span>
+          </button>
+        </div>
+
         <!-- 計分統計與操作列 -->
-        <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-3">
-          <div class="space-y-1">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 space-y-3 mt-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="text-sm text-slate-700">
-              <strong>已紀錄球數 (<span id="serveCount" class="text-blue-700 font-black">0</span> 球)：</strong>
-              <span id="serveHistory" class="text-emerald-700 font-bold break-all">尚未點擊球桌</span>
+              <strong>已紀錄球數 (<span id="serveCount" class="text-blue-700 font-black">0</span> 球)</strong>
+              <span class="text-xs text-slate-500 ml-1">（點擊下方任一球可修改分數或刪除）</span>
             </div>
-            <div class="text-base text-slate-900">
-              <strong>發球落點總分：</strong>
-              <span id="serveTotal" class="text-2xl font-black text-rose-600">0</span> <span class="text-sm font-bold">分</span>
+
+            <div class="flex items-center gap-2 shrink-0">
+              <button type="button" onclick="undoServe()"
+                class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-sm rounded-xl border border-slate-300 transition">
+                ↩ 復原上一球
+              </button>
+              <button type="button" onclick="resetServe()"
+                class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-sm rounded-xl border border-rose-200 transition">
+                🗑 清空重計
+              </button>
             </div>
           </div>
 
-          <div class="flex items-center gap-2 shrink-0">
-            <button type="button" onclick="undoServe()"
-              class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-sm rounded-xl border border-slate-300 transition">
-              ↩ 復原上一球
-            </button>
-            <button type="button" onclick="resetServe()"
-              class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-sm rounded-xl border border-rose-200 transition">
-              🗑 清空重計
-            </button>
+          <!-- 逐球分數顯示與點擊修改區 -->
+          <div id="serveBallsList" class="flex flex-wrap gap-2 min-h-[2.75rem] items-center p-2.5 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+            <span class="text-xs text-slate-400">尚未點擊球桌或失誤按鈕，點擊後將顯示每一球分數...</span>
+          </div>
+
+          <div class="pt-1 border-t border-slate-100 flex items-center justify-between">
+            <span class="text-sm font-bold text-slate-700">發球落點總分：</span>
+            <div>
+              <span id="serveTotal" class="text-2xl font-black text-rose-600">0</span>
+              <span class="text-sm font-bold text-slate-800">分</span>
+            </div>
           </div>
         </div>
       </div>
@@ -450,6 +473,38 @@
       📤 送出測驗成績至雲端
     </button>
   </form>
+</div>
+
+<!-- 單球分數修改互動視窗 (Modal) -->
+<div id="editBallModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200">
+    <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+      <h3 id="editBallTitle" class="text-base font-black text-slate-900">修改第 1 球分數</h3>
+      <button type="button" onclick="closeEditBallModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold px-2">&times;</button>
+    </div>
+
+    <p class="text-xs text-slate-600 mb-3">請選擇此球的正確分數或狀態：</p>
+    <div class="grid grid-cols-3 gap-2 mb-3">
+      <button type="button" onclick="applyBallEdit(10)" class="py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 font-black rounded-xl border border-emerald-300 transition">10 分</button>
+      <button type="button" onclick="applyBallEdit(9)"  class="py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-900 font-black rounded-xl border border-blue-300 transition">9 分</button>
+      <button type="button" onclick="applyBallEdit(8)"  class="py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-black rounded-xl border border-indigo-300 transition">8 分</button>
+      <button type="button" onclick="applyBallEdit(7)"  class="py-2.5 bg-sky-50 hover:bg-sky-100 text-sky-900 font-black rounded-xl border border-sky-300 transition">7 分</button>
+      <button type="button" onclick="applyBallEdit(6)"  class="py-2.5 bg-teal-50 hover:bg-teal-100 text-teal-900 font-black rounded-xl border border-teal-300 transition">6 分</button>
+      <button type="button" onclick="applyBallEdit(0, '出界/失誤')" class="py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-xs rounded-xl border border-amber-300 transition">出界/失誤<br>(0分)</button>
+    </div>
+    <div class="mb-4">
+      <button type="button" onclick="applyBallEdit(0, '犯規')" class="w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-800 font-bold text-xs rounded-xl border border-rose-300 transition">⚠️ 發球犯規 (0分)</button>
+    </div>
+
+    <div class="flex items-center justify-between pt-3 border-t border-slate-200">
+      <button type="button" onclick="deleteCurrentBall()" class="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl transition">
+        🗑 刪除此球
+      </button>
+      <button type="button" onclick="closeEditBallModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs rounded-xl transition">
+        取消
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- 預覽模式送出結果確認視窗 (Modal) -->
@@ -466,8 +521,8 @@
       <!-- 動態填入摘要內容 -->
     </div>
 
-    <div class="mt-4 bg-amber-50 border border-amber-200 text-amber-900 text-xs p-3 rounded-xl">
-      <strong>💡 正式上線說明：</strong>當您將程式碼貼至 GitHub 並填入 Google Apps Script 網址後，點擊送出就會直接把上方資料寫入您的 Google Sheet 試算表中！
+    <div class="mt-4 bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs p-3 rounded-xl">
+      <strong>☁️ 雲端同步完成：</strong>測驗紀錄已自動傳送並寫入 Google Sheet 試算表中，您可以點擊下方按鈕清空表單繼續下一位同學測驗。
     </div>
 
     <div class="mt-5 flex justify-end gap-2">
@@ -481,9 +536,36 @@
   </div>
 </div>
 
+<!-- 單顆發球分數修改彈窗 -->
+<div id="editServeModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200">
+    <div class="flex items-center justify-between border-b border-slate-200 pb-2.5 mb-3">
+      <h3 id="editServeTitle" class="text-base font-black text-slate-900">修改第 1 球分數</h3>
+      <button type="button" onclick="closeEditServeModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold px-1">&times;</button>
+    </div>
+    <p class="text-xs text-slate-500 mb-3">請點選要變更的分數，或刪除此顆發球紀錄：</p>
+    <div class="grid grid-cols-3 gap-2 mb-4">
+      <button type="button" onclick="applyServeEdit(10)" class="py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-black rounded-xl transition">10 分</button>
+      <button type="button" onclick="applyServeEdit(9)" class="py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-300 font-black rounded-xl transition">9 分</button>
+      <button type="button" onclick="applyServeEdit(8)" class="py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-300 font-black rounded-xl transition">8 分</button>
+      <button type="button" onclick="applyServeEdit(7)" class="py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-black rounded-xl transition">7 分</button>
+      <button type="button" onclick="applyServeEdit(6)" class="py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 font-black rounded-xl transition">6 分</button>
+      <button type="button" onclick="applyServeEdit(0)" class="py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-300 font-black rounded-xl transition">0 分 (失誤)</button>
+    </div>
+    <div class="flex justify-between items-center pt-2 border-t border-slate-100">
+      <button type="button" onclick="deleteServeItem()" class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl border border-rose-200 transition">
+        🗑 刪除此球
+      </button>
+      <button type="button" onclick="closeEditServeModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs rounded-xl transition">
+        取消
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
-  // ⚠️ 若要正式寫入 Google Sheets，請將下方引號內的網址替換為您的 Google Apps Script 部署網址
-  const SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
+  // Google Apps Script 雲端接收網址（已綁定您的 Google Sheet）
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwu9_TrZWW_y9joTKlt_bEr5HJv6tf-OQAhBbq_w8Or4S6q4I7WAs5c6ulmT3pk7-fp/exec";
 
   // 學生名單資料庫
   const STUDENT_ROSTER = [
@@ -568,7 +650,9 @@
 
   initDropdowns();
 
-  let serveScores = [];
+  // 每球紀錄格式：{ pts: 分數, note: 備註(例如 '出界/失誤' 或 '犯規') }
+  let serveRecords = [];
+  let editingBallIndex = -1;
 
   // 即時計算反手推、正手攻等級與徽章顏色
   function calcGrades() {
@@ -627,9 +711,9 @@
   }
 
   // 發球落點點擊計分與視覺回饋
-  function addServe(pts, btnElement) {
-    serveScores.push(pts);
-    if (btnElement) {
+  function addServe(pts, btnElement, note = "") {
+    serveRecords.push({ pts: pts, note: note });
+    if (btnElement && btnElement.classList.contains("zone-btn")) {
       btnElement.classList.add("zone-hit");
       setTimeout(() => btnElement.classList.remove("zone-hit"), 180);
     }
@@ -637,19 +721,85 @@
   }
 
   function undoServe() {
-    serveScores.pop();
+    serveRecords.pop();
     updateServeUI();
   }
 
   function resetServe() {
-    serveScores = [];
+    serveRecords = [];
     updateServeUI();
   }
 
+  function openEditBallModal(index) {
+    editingBallIndex = index;
+    const record = serveRecords[index];
+    const currentLabel = record.note ? `${record.note} (${record.pts}分)` : `${record.pts} 分`;
+    document.getElementById("editBallTitle").innerText = `修改第 ${index + 1} 球（目前：${currentLabel}）`;
+    const modal = document.getElementById("editBallModal");
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+  }
+
+  function closeEditBallModal() {
+    editingBallIndex = -1;
+    const modal = document.getElementById("editBallModal");
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+  }
+
+  function applyBallEdit(newPts, newNote = "") {
+    if (editingBallIndex >= 0 && editingBallIndex < serveRecords.length) {
+      serveRecords[editingBallIndex] = { pts: newPts, note: newNote };
+      updateServeUI();
+    }
+    closeEditBallModal();
+  }
+
+  function deleteCurrentBall() {
+    if (editingBallIndex >= 0 && editingBallIndex < serveRecords.length) {
+      serveRecords.splice(editingBallIndex, 1);
+      updateServeUI();
+    }
+    closeEditBallModal();
+  }
+
   function updateServeUI() {
-    document.getElementById("serveCount").innerText = serveScores.length;
-    document.getElementById("serveHistory").innerText = serveScores.length > 0 ? serveScores.join(" + ") : "尚未點擊球桌";
-    const total = serveScores.reduce((a, b) => a + b, 0);
+    document.getElementById("serveCount").innerText = serveRecords.length;
+    const listContainer = document.getElementById("serveBallsList");
+
+    if (serveRecords.length === 0) {
+      listContainer.innerHTML = `<span class="text-xs text-slate-400">尚未點擊球桌或失誤按鈕，點擊後將顯示每一球分數...</span>`;
+    } else {
+      listContainer.innerHTML = serveRecords.map((item, idx) => {
+        let badgeColor = "bg-emerald-100 text-emerald-900 border-emerald-300";
+        let displayText = `${item.pts}分`;
+
+        if (item.pts === 0) {
+          if (item.note === "犯規") {
+            badgeColor = "bg-rose-100 text-rose-800 border-rose-300";
+            displayText = `犯規 0分`;
+          } else {
+            badgeColor = "bg-amber-100 text-amber-900 border-amber-300";
+            displayText = `${item.note || "失誤"} 0分`;
+          }
+        } else if (item.pts <= 7) {
+          badgeColor = "bg-sky-100 text-sky-900 border-sky-300";
+        } else if (item.pts <= 9) {
+          badgeColor = "bg-blue-100 text-blue-900 border-blue-300";
+        }
+
+        return `
+          <button type="button" onclick="openEditBallModal(${idx})" title="點擊修改第 ${idx + 1} 球"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs sm:text-sm font-bold shadow-2xs hover:brightness-95 active:scale-95 transition cursor-pointer ${badgeColor}">
+            <span class="opacity-75">第${idx + 1}球</span>
+            <span class="font-black">${displayText}</span>
+            <span class="text-[10px] opacity-60">✎</span>
+          </button>
+        `;
+      }).join("");
+    }
+
+    const total = serveRecords.reduce((sum, item) => sum + item.pts, 0);
     document.getElementById("serveTotal").innerText = total;
   }
 
@@ -673,6 +823,10 @@
       getRadio("s5"), getRadio("s6"), getRadio("s7"), getRadio("s8")
     ];
 
+    const formattedDetails = serveRecords.length > 0
+      ? serveRecords.map((item, i) => `第${i + 1}球:${item.note ? `${item.note}(${item.pts}分)` : `${item.pts}分`}`).join(", ")
+      : "無";
+
     const payload = {
       studentId: studentId,
       studentName: studentName,
@@ -692,8 +846,8 @@
       s6: serveChecks[5],
       s7: serveChecks[6],
       s8: serveChecks[7],
-      serveDetails: serveScores.length > 0 ? serveScores.join(", ") : "無",
-      serveTotal: serveScores.reduce((a, b) => a + b, 0)
+      serveDetails: formattedDetails,
+      serveTotal: serveRecords.reduce((sum, item) => sum + item.pts, 0)
     };
 
     const showSummaryModal = (isCloudSent) => {
@@ -717,7 +871,7 @@
         <div class="pt-1 space-y-1">
           <div class="font-bold text-emerald-900">【任務二：正反手發球】</div>
           <div>• 8項動作檢核結果：<strong>${serveChecks.join(" / ")}</strong></div>
-          <div>• 落點明細 (${serveScores.length}球)：${payload.serveDetails}</div>
+          <div>• 落點明細 (${serveRecords.length}球)：${escapeHtml(payload.serveDetails)}</div>
           <div>• 發球落點總分：<strong class="text-rose-600 text-base">${payload.serveTotal} 分</strong></div>
         </div>
       `;
