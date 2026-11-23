@@ -238,18 +238,6 @@
         </table>
       </div>
 
-      <!-- 教師觀察加分欄位 -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200 mb-5">
-        <label for="actionScore" class="font-bold text-slate-800 text-sm sm:text-base">
-          教師觀察動作要領正確性加分 (0 - 10 分)：
-        </label>
-        <div class="flex items-center gap-2">
-          <input type="number" id="actionScore" min="0" max="10" value="0"
-            class="w-24 text-center py-2 px-3 border border-slate-300 rounded-lg font-bold text-blue-900 focus:ring-2 focus:ring-blue-600 outline-none">
-          <span class="text-sm text-slate-600 font-medium">分</span>
-        </div>
-      </div>
-
       <!-- 等級對照參考表 -->
       <div class="overflow-x-auto">
         <table class="w-full border-collapse border border-slate-300 text-center text-xs sm:text-sm">
@@ -283,6 +271,14 @@
           </tbody>
         </table>
       </div>
+
+      <!-- 任務一獨立送出按鈕 -->
+      <div class="mt-5 pt-4 border-t border-slate-200">
+        <button type="button" id="submitTask1Btn" onclick="submitTask1()"
+          class="w-full py-3.5 px-6 bg-blue-800 hover:bg-blue-900 active:scale-[0.99] text-white font-black text-base sm:text-lg rounded-xl shadow-md shadow-blue-900/15 transition cursor-pointer">
+          📤 送出任務一（1分鐘對打）成績至雲端
+        </button>
+      </div>
     </section>
 
     <!-- 任務二：正反手發球（含發下旋球） -->
@@ -292,21 +288,50 @@
           <span class="w-2 h-6 bg-emerald-700 rounded-full"></span>
           任務二：正反手發球（含發下旋球）
         </h2>
-        <button type="button" onclick="quickFillServeA()" class="text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold px-3 py-1.5 rounded-lg transition">
-          ⚡ 快捷全選「A 卓越」
+        <button type="button" onclick="quickFillServeAll()" class="text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold px-3 py-1.5 rounded-lg transition cursor-pointer">
+          ⚡ 快捷全選「A 卓越 (16分)」
         </button>
       </div>
 
-      <!-- 動作檢核表 -->
+      <!-- 1. 發球種類四個勾選選項 -->
+      <div class="bg-emerald-50/70 border border-emerald-200 rounded-xl p-4 mb-5">
+        <label class="block text-sm font-bold text-emerald-950 mb-2.5">
+          1. 請勾選測驗發球種類（可複選）： <span class="text-red-500">*</span>
+        </label>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <label class="flex items-center gap-2.5 bg-white px-3.5 py-2.5 rounded-xl border border-emerald-200 cursor-pointer hover:bg-emerald-50 transition font-bold text-slate-800 text-sm">
+            <input type="checkbox" name="serveType" value="正手平擊" class="w-5 h-5 accent-emerald-700 rounded cursor-pointer">
+            <span>正手平擊</span>
+          </label>
+          <label class="flex items-center gap-2.5 bg-white px-3.5 py-2.5 rounded-xl border border-emerald-200 cursor-pointer hover:bg-emerald-50 transition font-bold text-slate-800 text-sm">
+            <input type="checkbox" name="serveType" value="反手平擊" class="w-5 h-5 accent-emerald-700 rounded cursor-pointer">
+            <span>反手平擊</span>
+          </label>
+          <label class="flex items-center gap-2.5 bg-white px-3.5 py-2.5 rounded-xl border border-emerald-200 cursor-pointer hover:bg-emerald-50 transition font-bold text-slate-800 text-sm">
+            <input type="checkbox" name="serveType" value="正手下旋" class="w-5 h-5 accent-emerald-700 rounded cursor-pointer">
+            <span>正手下旋</span>
+          </label>
+          <label class="flex items-center gap-2.5 bg-white px-3.5 py-2.5 rounded-xl border border-emerald-200 cursor-pointer hover:bg-emerald-50 transition font-bold text-slate-800 text-sm">
+            <input type="checkbox" name="serveType" value="反手下旋" class="w-5 h-5 accent-emerald-700 rounded cursor-pointer">
+            <span>反手下旋</span>
+          </label>
+        </div>
+      <!-- 2. 動作階段檢核表（A 卓越 2分 / B 尚可 1分 / C 待加強 0分，滿分 16 分） -->
+      <div class="mb-2 flex items-center justify-between">
+        <span class="text-sm font-bold text-slate-800">2. 動作階段檢核（每項滿分 2 分，8 項滿分 16 分）：</span>
+        <span class="text-sm font-black text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full">
+          動作得分：<span id="actionCheckScore">0</span> / 16 分
+        </span>
+      </div>
       <div class="overflow-x-auto mb-6">
         <table class="w-full border-collapse border border-slate-300 text-sm sm:text-base">
           <thead>
             <tr class="bg-slate-100 text-slate-800">
-              <th class="border border-slate-300 py-2.5 px-2 w-24 sm:w-32 text-center">動作階段</th>
+              <th class="border border-slate-300 py-2.5 px-2 w-24 sm:w-28 text-center">動作階段</th>
               <th class="border border-slate-300 py-2.5 px-3 text-left">動作內容</th>
-              <th class="border border-slate-300 py-2.5 px-2 w-16 sm:w-20 text-center text-emerald-800">A 卓越</th>
-              <th class="border border-slate-300 py-2.5 px-2 w-16 sm:w-20 text-center text-amber-700">B 尚可</th>
-              <th class="border border-slate-300 py-2.5 px-2 w-16 sm:w-20 text-center text-rose-700">C 待加強</th>
+              <th class="border border-slate-300 py-2.5 px-1.5 w-16 sm:w-20 text-center text-emerald-800">A 卓越<br><span class="text-xs font-normal">(2分)</span></th>
+              <th class="border border-slate-300 py-2.5 px-1.5 w-16 sm:w-20 text-center text-blue-800">B 尚可<br><span class="text-xs font-normal">(1分)</span></th>
+              <th class="border border-slate-300 py-2.5 px-1.5 w-16 sm:w-20 text-center text-amber-800">C 待加強<br><span class="text-xs font-normal">(0分)</span></th>
             </tr>
           </thead>
           <tbody>
@@ -316,21 +341,21 @@
                 預備姿勢<br><span class="text-xs text-slate-500 font-normal">(掌上明珠)</span>
               </td>
               <td class="border border-slate-300 py-2.5 px-3">球置於掌心上，胸前 30 公分處</td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s1" value="A" required></td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s1" value="B"></td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s1" value="C"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s1" value="A|2" onchange="calcTask2Totals()"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s1" value="B|1" onchange="calcTask2Totals()"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s1" value="C|0" onchange="calcTask2Totals()"></td>
             </tr>
             <tr>
               <td class="border border-slate-300 py-2.5 px-3">雙腳與肩同寬，前後開立</td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s2" value="A" required></td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s2" value="B"></td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s2" value="C"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s2" value="A|2" onchange="calcTask2Totals()"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s2" value="B|1" onchange="calcTask2Totals()"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s2" value="C|0" onchange="calcTask2Totals()"></td>
             </tr>
             <tr>
               <td class="border border-slate-300 py-2.5 px-3">兩眼注視對方站立位置</td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s3" value="A" required></td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s3" value="B"></td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s3" value="C"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s3" value="A|2" onchange="calcTask2Totals()"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s3" value="B|1" onchange="calcTask2Totals()"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s3" value="C|0" onchange="calcTask2Totals()"></td>
             </tr>
 
             <!-- 拋球和擊球動作 -->
@@ -339,21 +364,21 @@
                 拋球和<br>擊球動作
               </td>
               <td class="border border-slate-300 py-2.5 px-3">將球拋高 16 公分以上</td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s4" value="A" required></td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s4" value="B"></td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s4" value="C"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s4" value="A|2" onchange="calcTask2Totals()"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s4" value="B|1" onchange="calcTask2Totals()"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s4" value="C|0" onchange="calcTask2Totals()"></td>
             </tr>
             <tr>
               <td class="border border-slate-300 py-2.5 px-3">擊球時拍面斜 45 度向前</td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s5" value="A" required></td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s5" value="B"></td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s5" value="C"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s5" value="A|2" onchange="calcTask2Totals()"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s5" value="B|1" onchange="calcTask2Totals()"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s5" value="C|0" onchange="calcTask2Totals()"></td>
             </tr>
             <tr>
               <td class="border border-slate-300 py-2.5 px-3">球的第一落點，落在己方桌面近端線處</td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s6" value="A" required></td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s6" value="B"></td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s6" value="C"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s6" value="A|2" onchange="calcTask2Totals()"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s6" value="B|1" onchange="calcTask2Totals()"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s6" value="C|0" onchange="calcTask2Totals()"></td>
             </tr>
 
             <!-- 結束動作 -->
@@ -362,26 +387,61 @@
                 結束動作
               </td>
               <td class="border border-slate-300 py-2.5 px-3">揮拍至左（右）肩前上方</td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s7" value="A" required></td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s7" value="B"></td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s7" value="C"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s7" value="A|2" onchange="calcTask2Totals()"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s7" value="B|1" onchange="calcTask2Totals()"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s7" value="C|0" onchange="calcTask2Totals()"></td>
             </tr>
             <tr>
               <td class="border border-slate-300 py-2.5 px-3">恢復接球姿勢</td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s8" value="A" required></td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s8" value="B"></td>
-              <td class="border border-slate-300 text-center"><input type="radio" name="s8" value="C"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s8" value="A|2" onchange="calcTask2Totals()"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s8" value="B|1" onchange="calcTask2Totals()"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s8" value="C|0" onchange="calcTask2Totals()"></td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- 互動式發球落點計分區 -->
+      <!-- 3. 發球品質教師評分 -->
+      <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-4 mb-6">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <label class="text-sm font-bold text-amber-950">
+            3. 發球品質教師評分： <span class="text-red-500">*</span>
+          </label>
+          <span class="text-sm font-black text-amber-900 bg-amber-100 px-3 py-1 rounded-full">
+            品質得分：<span id="qualityScoreDisplay">0</span> 分
+          </span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <label class="flex items-center justify-between bg-white px-4 py-3 rounded-xl border border-amber-300 cursor-pointer hover:bg-amber-50 transition">
+            <div class="flex items-center gap-2.5">
+              <input type="radio" name="serveQuality" value="A|14" onchange="calcTask2Totals()">
+              <span class="font-black text-emerald-800 text-base">A 等級</span>
+            </div>
+            <span class="bg-emerald-100 text-emerald-900 font-black text-xs px-2.5 py-1 rounded-full">14 分</span>
+          </label>
+          <label class="flex items-center justify-between bg-white px-4 py-3 rounded-xl border border-amber-300 cursor-pointer hover:bg-amber-50 transition">
+            <div class="flex items-center gap-2.5">
+              <input type="radio" name="serveQuality" value="B|10" onchange="calcTask2Totals()">
+              <span class="font-black text-blue-800 text-base">B 等級</span>
+            </div>
+            <span class="bg-blue-100 text-blue-900 font-black text-xs px-2.5 py-1 rounded-full">10 分</span>
+          </label>
+          <label class="flex items-center justify-between bg-white px-4 py-3 rounded-xl border border-amber-300 cursor-pointer hover:bg-amber-50 transition">
+            <div class="flex items-center gap-2.5">
+              <input type="radio" name="serveQuality" value="C|6" onchange="calcTask2Totals()">
+              <span class="font-black text-amber-800 text-base">C 等級</span>
+            </div>
+            <span class="bg-amber-100 text-amber-900 font-black text-xs px-2.5 py-1 rounded-full">6 分</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 4. 互動式發球落點計分區（共發 8 球） -->
       <div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
           <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
-            🎯 發球落點計分區
-            <span class="text-xs font-normal text-slate-600">(直接點擊球桌對應落點累計分數)</span>
+            🎯 4. 發球落點計分區（共發 8 球）
+            <span class="text-xs font-normal text-slate-600">(直接點擊球桌對應落點累計分數，最多 8 球)</span>
           </h3>
         </div>
 
@@ -435,8 +495,9 @@
         <div class="bg-white p-4 rounded-xl border border-slate-200 space-y-3 mt-3">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="text-sm text-slate-700">
-              <strong>已紀錄球數 (<span id="serveCount" class="text-blue-700 font-black">0</span> 球)</strong>
-              <span class="text-xs text-slate-500 ml-1">（點擊下方任一球可修改分數或刪除）</span>
+              <strong>已紀錄球數 (<span id="serveCount" class="text-blue-700 font-black">0</span> / 8 球)</strong>
+              <span id="serveCompleteBadge" class="hidden ml-1.5 bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-0.5 rounded-full">✅ 已滿 8 球</span>
+              <span class="block sm:inline text-xs text-slate-500 sm:ml-1">（點擊下方任一球可修改分數或刪除）</span>
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
@@ -453,25 +514,35 @@
 
           <!-- 逐球分數顯示與點擊修改區 -->
           <div id="serveBallsList" class="flex flex-wrap gap-2 min-h-[2.75rem] items-center p-2.5 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-            <span class="text-xs text-slate-400">尚未點擊球桌或失誤按鈕，點擊後將顯示每一球分數...</span>
+            <span class="text-xs text-slate-400">尚未點擊球桌或失誤按鈕，請依序紀錄 8 球發球落點...</span>
           </div>
 
-          <div class="pt-1 border-t border-slate-100 flex items-center justify-between">
-            <span class="text-sm font-bold text-slate-700">發球落點總分：</span>
-            <div>
-              <span id="serveTotal" class="text-2xl font-black text-rose-600">0</span>
-              <span class="text-sm font-bold text-slate-800">分</span>
+          <!-- 任務二各項分數彙整 -->
+          <div class="pt-3 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+            <div class="bg-slate-50 px-3 py-2 rounded-lg flex justify-between items-center">
+              <span class="text-slate-600">落點 8 球總分：</span>
+              <span class="font-black text-rose-600 text-base"><span id="serveTotal">0</span> 分</span>
+            </div>
+            <div class="bg-slate-50 px-3 py-2 rounded-lg flex justify-between items-center">
+              <span class="text-slate-600">動作 + 品質分：</span>
+              <span class="font-black text-blue-700 text-base"><span id="actionPlusQuality">0</span> 分</span>
+            </div>
+            <div class="bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-lg flex justify-between items-center">
+              <span class="font-bold text-emerald-950">任務二總分：</span>
+              <span class="font-black text-emerald-800 text-lg"><span id="task2GrandTotal">0</span> 分</span>
             </div>
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- 送出按鈕 -->
-    <button type="submit" id="submitBtn"
-      class="w-full py-4 px-6 bg-blue-800 hover:bg-blue-900 active:scale-[0.99] text-white font-black text-lg rounded-2xl shadow-lg shadow-blue-900/20 transition cursor-pointer">
-      📤 送出測驗成績至雲端
-    </button>
+      <!-- 任務二獨立送出按鈕 -->
+      <div class="mt-5 pt-4 border-t border-slate-200">
+        <button type="button" id="submitTask2Btn" onclick="submitTask2()"
+          class="w-full py-3.5 px-6 bg-emerald-700 hover:bg-emerald-800 active:scale-[0.99] text-white font-black text-base sm:text-lg rounded-xl shadow-md shadow-emerald-900/15 transition cursor-pointer">
+          📤 送出任務二（正反手發球）成績至雲端
+        </button>
+      </div>
+    </section>
   </form>
 </div>
 
@@ -526,13 +597,25 @@
     </div>
 
     <div class="mt-5 flex justify-end gap-2">
-      <button type="button" onclick="closeModalAndReset()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl text-sm transition">
-        清空表單繼續測試
+      <button type="button" id="modalResetBtn" onclick="closeModalAndReset()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl text-sm transition">
+        清空目前任務繼續下一位
       </button>
       <button type="button" onclick="closeModal()" class="px-5 py-2 bg-blue-800 hover:bg-blue-900 text-white font-bold rounded-xl text-sm transition">
         確認關閉
       </button>
     </div>
+  </div>
+</div>
+
+<!-- 提示訊息視窗 (取代 alert) -->
+<div id="alertModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 text-center">
+    <div class="text-3xl mb-2">⚠️</div>
+    <h3 class="text-base font-black text-slate-900 mb-1">欄位尚未填寫完整</h3>
+    <p id="alertMessage" class="text-sm text-slate-600 mb-4"></p>
+    <button type="button" onclick="closeAlertModal()" class="w-full py-2.5 bg-blue-800 hover:bg-blue-900 text-white font-bold rounded-xl text-sm transition">
+      我知道了
+    </button>
   </div>
 </div>
 
@@ -690,7 +773,6 @@
     }
   }
 
-  // 依據等級回傳對應徽章顏色樣式
   function getBadgeStyle(grade) {
     const base = "inline-block min-w-[3.2rem] py-1 px-3 rounded-full font-black text-sm ";
     switch (grade) {
@@ -702,16 +784,42 @@
     }
   }
 
-  // 快捷全選「A 卓越」
-  function quickFillServeA() {
+  // 快捷全選「A 卓越 (16分)」
+  function quickFillServeAll() {
     for (let i = 1; i <= 8; i++) {
-      const radioA = document.querySelector(`input[name="s${i}"][value="A"]`);
+      const radioA = document.querySelector(`input[name="s${i}"][value="A|2"]`);
       if (radioA) radioA.checked = true;
     }
+    calcTask2Totals();
   }
 
-  // 發球落點點擊計分與視覺回饋
+  // 即時計算任務二各項分數（動作階段 A:2分/B:1分/C:0分 + 品質評分 + 8球落點）
+  function calcTask2Totals() {
+    let actionScore = 0;
+    for (let i = 1; i <= 8; i++) {
+      const checked = document.querySelector(`input[name="s${i}"]:checked`);
+      if (checked) {
+        actionScore += parseInt(checked.value.split("|")[1]);
+      }
+    }
+    document.getElementById("actionCheckScore").innerText = actionScore;
+
+    const qualityRadio = document.querySelector('input[name="serveQuality"]:checked');
+    const qualityScore = qualityRadio ? parseInt(qualityRadio.value.split("|")[1]) : 0;
+    document.getElementById("qualityScoreDisplay").innerText = qualityScore;
+
+    const serveTotal = serveRecords.reduce((sum, item) => sum + item.pts, 0);
+    document.getElementById("serveTotal").innerText = serveTotal;
+    document.getElementById("actionPlusQuality").innerText = actionScore + qualityScore;
+    document.getElementById("task2GrandTotal").innerText = actionScore + qualityScore + serveTotal;
+  }
+
+  // 發球落點點擊計分與視覺回饋（上限 8 球）
   function addServe(pts, btnElement, note = "") {
+    if (serveRecords.length >= 8) {
+      showAlertModal("發球落點已達上限 8 球！若需修改請直接點擊下方該球徽章，或按「復原上一球」。");
+      return;
+    }
     serveRecords.push({ pts: pts, note: note });
     if (btnElement && btnElement.classList.contains("zone-btn")) {
       btnElement.classList.add("zone-hit");
@@ -765,10 +873,17 @@
 
   function updateServeUI() {
     document.getElementById("serveCount").innerText = serveRecords.length;
+    const completeBadge = document.getElementById("serveCompleteBadge");
+    if (serveRecords.length === 8) {
+      completeBadge.classList.remove("hidden");
+    } else {
+      completeBadge.classList.add("hidden");
+    }
+
     const listContainer = document.getElementById("serveBallsList");
 
     if (serveRecords.length === 0) {
-      listContainer.innerHTML = `<span class="text-xs text-slate-400">尚未點擊球桌或失誤按鈕，點擊後將顯示每一球分數...</span>`;
+      listContainer.innerHTML = `<span class="text-xs text-slate-400">尚未點擊球桌或失誤按鈕，請依序紀錄 8 球發球落點...</span>`;
     } else {
       listContainer.innerHTML = serveRecords.map((item, idx) => {
         let badgeColor = "bg-emerald-100 text-emerald-900 border-emerald-300";
@@ -799,103 +914,83 @@
       }).join("");
     }
 
-    const total = serveRecords.reduce((sum, item) => sum + item.pts, 0);
-    document.getElementById("serveTotal").innerText = total;
+    calcTask2Totals();
   }
 
-  // 預覽與雲端表單送出
-  document.getElementById("examForm").addEventListener("submit", function(e) {
-    e.preventDefault();
+  let lastSubmittedTask = 0;
 
-    // 解析受測者學號與姓名
+  function showAlertModal(msg) {
+    document.getElementById("alertMessage").innerText = msg;
+    const modal = document.getElementById("alertModal");
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+  }
+
+  function closeAlertModal() {
+    const modal = document.getElementById("alertModal");
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+  }
+
+  // 驗證並取得基本資料
+  function getBasicInfo() {
     const studentVal = document.getElementById("studentSelect").value;
-    const [studentId, studentName] = studentVal ? studentVal.split("|") : ["", ""];
+    if (!studentVal) {
+      showAlertModal("請先選擇「受測者（學號 / 姓名）」！");
+      document.getElementById("studentSelect").focus();
+      return null;
+    }
+    const [studentId, studentName] = studentVal.split("|");
 
-    // 解析紀錄者姓名
     const recorderSelectVal = document.getElementById("recorderSelect").value;
+    if (!recorderSelectVal) {
+      showAlertModal("請先選擇「紀錄者（同學 / 教師）」！");
+      document.getElementById("recorderSelect").focus();
+      return null;
+    }
     const recorderName = recorderSelectVal === "__CUSTOM__"
       ? document.getElementById("customRecorderInput").value.trim()
       : recorderSelectVal;
 
-    const getRadio = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value || "-";
-    const serveChecks = [
-      getRadio("s1"), getRadio("s2"), getRadio("s3"), getRadio("s4"),
-      getRadio("s5"), getRadio("s6"), getRadio("s7"), getRadio("s8")
-    ];
+    if (!recorderName) {
+      showAlertModal("請手動輸入「紀錄者姓名」！");
+      document.getElementById("customRecorderInput").focus();
+      return null;
+    }
 
-    const formattedDetails = serveRecords.length > 0
-      ? serveRecords.map((item, i) => `第${i + 1}球:${item.note ? `${item.note}(${item.pts}分)` : `${item.pts}分`}`).join(", ")
-      : "無";
+    return { studentId, studentName, recorderName };
+  }
 
-    const payload = {
-      studentId: studentId,
-      studentName: studentName,
-      recorderName: recorderName,
-      bhMax: document.getElementById("bhMax").value,
-      bhMin: document.getElementById("bhMin").value,
-      bhGrade: document.getElementById("bhGradeDisplay").innerText,
-      fhMax: document.getElementById("fhMax").value,
-      fhMin: document.getElementById("fhMin").value,
-      fhGrade: document.getElementById("fhGradeDisplay").innerText,
-      actionScore: document.getElementById("actionScore").value || "0",
-      s1: serveChecks[0],
-      s2: serveChecks[1],
-      s3: serveChecks[2],
-      s4: serveChecks[3],
-      s5: serveChecks[4],
-      s6: serveChecks[5],
-      s7: serveChecks[6],
-      s8: serveChecks[7],
-      serveDetails: formattedDetails,
-      serveTotal: serveRecords.reduce((sum, item) => sum + item.pts, 0)
-    };
+  // 共用雲端傳送函式
+  function sendToCloud(taskNumber, payload, btnElement, originalBtnText, summaryHtml) {
+    lastSubmittedTask = taskNumber;
 
     const showSummaryModal = (isCloudSent) => {
       const modalTitle = document.querySelector("#previewModal h3");
       modalTitle.innerHTML = isCloudSent
-        ? "✅ 測驗成績已成功傳送至雲端！"
-        : "✅ 預覽送出成功（模擬資料摘要）";
+        ? `✅ 任務${taskNumber === 1 ? "一" : "二"}成績已成功傳送至雲端！`
+        : `✅ 任務${taskNumber === 1 ? "一" : "二"}預覽送出成功`;
 
-      document.getElementById("modalContent").innerHTML = `
-        <div class="grid grid-cols-2 gap-2 pb-2 border-b border-slate-200">
-          <div><strong>學號：</strong>${escapeHtml(payload.studentId)}</div>
-          <div><strong>受測者：</strong>${escapeHtml(payload.studentName)}</div>
-          <div class="col-span-2"><strong>紀錄者：</strong>${escapeHtml(payload.recorderName)}</div>
-        </div>
-        <div class="py-2 border-b border-slate-200 space-y-1">
-          <div class="font-bold text-blue-900">【任務一：1分鐘對打測驗】</div>
-          <div>• 反手推：最高連續 <strong>${payload.bhMax}</strong> 次 / 1分鐘 <strong>${payload.bhMin}</strong> 次 → 等級 <span class="font-black text-blue-700">${payload.bhGrade}</span></div>
-          <div>• 正手攻：最高連續 <strong>${payload.fhMax}</strong> 次 / 1分鐘 <strong>${payload.fhMin}</strong> 次 → 等級 <span class="font-black text-blue-700">${payload.fhGrade}</span></div>
-          <div>• 教師動作觀察加分：<strong>${payload.actionScore}</strong> 分</div>
-        </div>
-        <div class="pt-1 space-y-1">
-          <div class="font-bold text-emerald-900">【任務二：正反手發球】</div>
-          <div>• 8項動作檢核結果：<strong>${serveChecks.join(" / ")}</strong></div>
-          <div>• 落點明細 (${serveRecords.length}球)：${escapeHtml(payload.serveDetails)}</div>
-          <div>• 發球落點總分：<strong class="text-rose-600 text-base">${payload.serveTotal} 分</strong></div>
-        </div>
-      `;
+      document.getElementById("modalContent").innerHTML = summaryHtml;
+      document.getElementById("modalResetBtn").innerText = `清空任務${taskNumber === 1 ? "一" : "二"}繼續下一位`;
 
       const modal = document.getElementById("previewModal");
       modal.classList.remove("hidden");
       modal.classList.add("flex");
     };
 
-    // 若尚未設定 Google Apps Script 網址，顯示預覽摘要視窗
     if (SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
       showSummaryModal(false);
       return;
     }
 
-    // 正式傳送至 Google Sheets
-    const btn = document.getElementById("submitBtn");
-    btn.disabled = true;
-    btn.innerText = "⏳ 資料傳送中，請稍候...";
+    btnElement.disabled = true;
+    btnElement.innerText = "⏳ 資料傳送中，請稍候...";
 
     fetch(SCRIPT_URL, {
       method: "POST",
       mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload)
     })
     .then(() => {
@@ -903,12 +998,160 @@
     })
     .catch(err => {
       console.error("傳送失敗：", err);
+      showAlertModal("傳送失敗，請檢查網路連線後重試！");
     })
     .finally(() => {
-      btn.disabled = false;
-      btn.innerText = "📤 送出測驗成績至雲端";
+      btnElement.disabled = false;
+      btnElement.innerText = originalBtnText;
     });
-  });
+  }
+
+  // 送出任務一（反手推、正手攻 1 分鐘對打）
+  function submitTask1() {
+    const basic = getBasicInfo();
+    if (!basic) return;
+
+    const bhMax = document.getElementById("bhMax").value;
+    const bhMin = document.getElementById("bhMin").value;
+    const fhMax = document.getElementById("fhMax").value;
+    const fhMin = document.getElementById("fhMin").value;
+
+    if (bhMax === "" || bhMin === "" || fhMax === "" || fhMin === "") {
+      showAlertModal("請完整填寫反手推與正手攻的「最高連續次數」與「一分鐘次數」！\n（若未測驗該項請填 0）");
+      return;
+    }
+
+    const bhGrade = document.getElementById("bhGradeDisplay").innerText;
+    const fhGrade = document.getElementById("fhGradeDisplay").innerText;
+
+    const payload = {
+      taskType: "任務一：1分鐘對打",
+      studentId: basic.studentId,
+      studentName: basic.studentName,
+      recorderName: basic.recorderName,
+      bhMax: bhMax,
+      bhMin: bhMin,
+      bhGrade: bhGrade,
+      fhMax: fhMax,
+      fhMin: fhMin,
+      fhGrade: fhGrade,
+      s1: "", s2: "", s3: "", s4: "", s5: "", s6: "", s7: "", s8: "",
+      serveDetails: "",
+      serveTotal: ""
+    };
+
+    const summaryHtml = `
+      <div class="grid grid-cols-2 gap-2 pb-2 border-b border-slate-200">
+        <div><strong>學號：</strong>${escapeHtml(payload.studentId)}</div>
+        <div><strong>受測者：</strong>${escapeHtml(payload.studentName)}</div>
+        <div class="col-span-2"><strong>紀錄者：</strong>${escapeHtml(payload.recorderName)}</div>
+      </div>
+      <div class="pt-2 space-y-1">
+        <div class="font-bold text-blue-900">【任務一：1分鐘對打測驗】</div>
+        <div>• 反手推：最高連續 <strong>${payload.bhMax}</strong> 次 / 1分鐘 <strong>${payload.bhMin}</strong> 次 → 等級 <span class="font-black text-blue-700">${payload.bhGrade}</span></div>
+        <div>• 正手攻：最高連續 <strong>${payload.fhMax}</strong> 次 / 1分鐘 <strong>${payload.fhMin}</strong> 次 → 等級 <span class="font-black text-blue-700">${payload.fhGrade}</span></div>
+      </div>
+    `;
+
+    const btn = document.getElementById("submitTask1Btn");
+    sendToCloud(1, payload, btn, "📤 送出任務一（1分鐘對打）成績至雲端", summaryHtml);
+  }
+
+  // 送出任務二（正反手發球）
+  function submitTask2() {
+    const basic = getBasicInfo();
+    if (!basic) return;
+
+    // 1. 檢查發球種類
+    const selectedTypes = Array.from(document.querySelectorAll('input[name="serveType"]:checked')).map(cb => cb.value);
+    if (selectedTypes.length === 0) {
+      showAlertModal("請至少勾選一項「發球種類」（正手平擊、反手平擊、正手下旋、反手下旋）！");
+      return;
+    }
+
+    // 2. 檢查並計算動作階段評分（A 卓越 2分 / B 尚可 1分 / C 待加強 0分）
+    const actionLabels = [];
+    let actionScore = 0;
+    for (let i = 1; i <= 8; i++) {
+      const checked = document.querySelector(`input[name="s${i}"]:checked`);
+      if (!checked) {
+        showAlertModal(`「動作階段檢核」第 ${i} 項尚未評分，請完成 8 項動作評比後再送出！`);
+        return;
+      }
+      const [grade, ptsStr] = checked.value.split("|");
+      const pts = parseInt(ptsStr);
+      actionLabels.push(`${grade}(${pts}分)`);
+      actionScore += pts;
+    }
+
+    // 3. 檢查發球品質教師評分
+    const qualityRadio = document.querySelector('input[name="serveQuality"]:checked');
+    if (!qualityRadio) {
+      showAlertModal("請選擇「發球品質教師評分」（A等級 14分 / B等級 10分 / C等級 6分）！");
+      return;
+    }
+    const [qualityGrade, qualityScoreStr] = qualityRadio.value.split("|");
+    const qualityScore = parseInt(qualityScoreStr);
+
+    // 4. 檢查發球落點是否滿 8 球
+    if (serveRecords.length !== 8) {
+      showAlertModal(`發球落點需紀錄滿 8 球（目前僅紀錄 ${serveRecords.length} 球），請完成 8 球後再送出！`);
+      return;
+    }
+
+    const formattedDetails = serveRecords
+      .map((item, i) => `第${i + 1}球:${item.note ? `${item.note}(${item.pts}分)` : `${item.pts}分`}`)
+      .join(", ");
+    const serveTotal = serveRecords.reduce((sum, item) => sum + item.pts, 0);
+    const task2GrandTotal = actionScore + qualityScore + serveTotal;
+
+    const payload = {
+      taskType: "任務二：正反手發球",
+      studentId: basic.studentId,
+      studentName: basic.studentName,
+      recorderName: basic.recorderName,
+      bhMax: "",
+      bhMin: "",
+      bhGrade: "",
+      fhMax: "",
+      fhMin: "",
+      fhGrade: "",
+      serveTypes: selectedTypes.join("、"),
+      s1: actionLabels[0],
+      s2: actionLabels[1],
+      s3: actionLabels[2],
+      s4: actionLabels[3],
+      s5: actionLabels[4],
+      s6: actionLabels[5],
+      s7: actionLabels[6],
+      s8: actionLabels[7],
+      actionScore: actionScore,
+      qualityGrade: `${qualityGrade}等級 (${qualityScore}分)`,
+      serveDetails: formattedDetails,
+      serveTotal: serveTotal,
+      task2GrandTotal: task2GrandTotal
+    };
+
+    const summaryHtml = `
+      <div class="grid grid-cols-2 gap-2 pb-2 border-b border-slate-200">
+        <div><strong>學號：</strong>${escapeHtml(payload.studentId)}</div>
+        <div><strong>受測者：</strong>${escapeHtml(payload.studentName)}</div>
+        <div class="col-span-2"><strong>紀錄者：</strong>${escapeHtml(payload.recorderName)}</div>
+      </div>
+      <div class="pt-2 space-y-1.5">
+        <div class="font-bold text-emerald-900">【任務二：正反手發球】</div>
+        <div>• 發球種類：<strong>${escapeHtml(payload.serveTypes)}</strong></div>
+        <div>• 動作階段得分：<strong>${actionScore} / 16 分</strong>（${actionLabels.join("、")}）</div>
+        <div>• 發球品質教師評分：<strong>${escapeHtml(payload.qualityGrade)}</strong></div>
+        <div>• 落點明細 (8球)：${escapeHtml(payload.serveDetails)}</div>
+        <div>• 落點 8 球總分：<strong class="text-rose-600">${serveTotal} 分</strong></div>
+        <div class="pt-1 border-t border-slate-200 text-base">• 任務二總計：<strong class="text-emerald-800">${task2GrandTotal} 分</strong></div>
+      </div>
+    `;
+
+    const btn = document.getElementById("submitTask2Btn");
+    sendToCloud(2, payload, btn, "📤 送出任務二（正反手發球）成績至雲端", summaryHtml);
+  }
 
   function closeModal() {
     const modal = document.getElementById("previewModal");
@@ -917,10 +1160,25 @@
   }
 
   function closeModalAndReset() {
-    document.getElementById("examForm").reset();
-    toggleCustomRecorder();
-    resetServe();
-    calcGrades();
+    if (lastSubmittedTask === 1) {
+      document.getElementById("bhMax").value = "";
+      document.getElementById("bhMin").value = "";
+      document.getElementById("fhMax").value = "";
+      document.getElementById("fhMin").value = "";
+      calcGrades();
+    } else if (lastSubmittedTask === 2) {
+      document.querySelectorAll('input[name="serveType"]').forEach(cb => cb.checked = false);
+      for (let i = 1; i <= 8; i++) {
+        document.querySelectorAll(`input[name="s${i}"]`).forEach(r => r.checked = false);
+      }
+      document.querySelectorAll('input[name="serveQuality"]').forEach(r => r.checked = false);
+      resetServe();
+    } else {
+      document.getElementById("examForm").reset();
+      toggleCustomRecorder();
+      resetServe();
+      calcGrades();
+    }
     closeModal();
   }
 
