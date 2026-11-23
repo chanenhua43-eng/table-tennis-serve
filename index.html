@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>桌球技能測驗與等級評量表</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background-color: #f1f5f9;
+      color: #1e293b;
+    }
+
+    /* 互動式發球球桌專用網格樣式，精準還原附圖落點分區 */
+    .pingpong-court-container {
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .pingpong-court {
+      display: inline-flex;
+      align-items: center;
+      margin: 0 auto;
+      user-select: none;
+    }
+
+    .receiver-side {
+      display: grid;
+      grid-template-columns: 68px 58px 88px 68px 58px;
+      grid-template-rows: 46px 46px 108px 46px 46px;
+      border: 3px solid #0f172a;
+      background-color: #15803d;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.25);
+    }
+
+    .net-line {
+      width: 8px;
+      height: 312px;
+      background-color: #ffffff;
+      border-left: 2px dashed #475569;
+      border-right: 2px dashed #475569;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      z-index: 10;
+    }
+
+    .server-side {
+      width: 170px;
+      height: 292px;
+      border: 3px solid #0f172a;
+      border-left: none;
+      background-color: #166534;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* 球桌中線裝飾 */
+    .server-side::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 2px;
+      background-color: rgba(255, 255, 255, 0.45);
+      transform: translateY(-50%);
+    }
+
+    .server-box {
+      position: relative;
+      z-index: 2;
+      background: #ffffff;
+      color: #0f172a;
+      padding: 8px 18px;
+      border: 2px solid #0f172a;
+      font-weight: 700;
+      border-radius: 6px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    }
+
+    .zone-btn {
+      border: 1.5px solid #fb923c;
+      background: rgba(255, 255, 255, 0.06);
+      color: #ffffff;
+      font-size: 1.3rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.12s ease;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+
+    .zone-btn:hover {
+      background: rgba(255, 255, 255, 0.24);
+    }
+
+    .zone-btn:active, .zone-hit {
+      transform: scale(0.94);
+      background-color: #f97316 !important;
+      color: #ffffff;
+    }
+
+    /* 網格區域合併對應附圖配置 */
+    .z-tl-10 { grid-column: 1 / 3; grid-row: 1 / 3; }
+    .z-tm-8  { grid-column: 3 / 4; grid-row: 1 / 2; }
+    .z-tm-7  { grid-column: 3 / 4; grid-row: 2 / 3; }
+    .z-tr-10 { grid-column: 4 / 6; grid-row: 1 / 3; }
+
+    .z-ml-9  { grid-column: 1 / 2; grid-row: 3 / 4; }
+    .z-ml-8  { grid-column: 2 / 3; grid-row: 3 / 4; }
+    .z-mm-6  { grid-column: 3 / 4; grid-row: 3 / 4; }
+    .z-mr-8  { grid-column: 4 / 5; grid-row: 3 / 4; }
+    .z-mr-9  { grid-column: 5 / 6; grid-row: 3 / 4; }
+
+    .z-bl-10 { grid-column: 1 / 3; grid-row: 4 / 6; }
+    .z-bm-7  { grid-column: 3 / 4; grid-row: 4 / 5; }
+    .z-bm-8  { grid-column: 3 / 4; grid-row: 5 / 6; }
+    .z-br-10 { grid-column: 4 / 6; grid-row: 4 / 6; }
+
+    /* 自訂單選按鈕放大，方便手機平板點擊 */
+    input[type="radio"] {
+      width: 1.25rem;
+      height: 1.25rem;
+      accent-color: #1e40af;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="py-6 px-3 sm:px-6">
+
+<div class="max-w-4xl mx-auto">
+  <!-- 頁首標題 -->
+  <header class="text-center mb-6">
+    <div class="inline-flex items-center gap-2 bg-blue-900 text-white px-4 py-1.5 rounded-full text-sm font-bold mb-2 shadow-sm">
+      <span>🏓 體育科數位評量系統</span>
+      <span class="bg-emerald-500 text-slate-950 text-xs px-2 py-0.5 rounded-full">互動預覽版</span>
+    </div>
+    <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">桌球技能測驗與等級評量表</h1>
+    <p class="text-slate-600 text-sm mt-1">請依序完成「對打測驗」與「發球動作及落點」評量</p>
+  </header>
+
+  <form id="examForm" class="space-y-6">
+    <!-- 基本資料卡片 -->
+    <section class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200">
+      <h2 class="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
+        <span class="w-2 h-6 bg-blue-800 rounded-full"></span>
+        基本資料登錄
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label for="studentId" class="block text-sm font-bold text-slate-700 mb-1">班級座號 <span class="text-red-500">*</span></label>
+          <input type="text" id="studentId" placeholder="例：80105" required
+            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition">
+        </div>
+        <div>
+          <label for="studentName" class="block text-sm font-bold text-slate-700 mb-1">受測者姓名 <span class="text-red-500">*</span></label>
+          <input type="text" id="studentName" placeholder="請輸入受測學生姓名" required
+            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition">
+        </div>
+        <div>
+          <label for="recorderName" class="block text-sm font-bold text-slate-700 mb-1">紀錄者姓名 <span class="text-red-500">*</span></label>
+          <input type="text" id="recorderName" placeholder="請輸入同儕或教師姓名" required
+            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition">
+        </div>
+      </div>
+    </section>
+
+    <!-- 任務一：反手推、正手攻 1 分鐘對打測驗等級量表 -->
+    <section class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <h2 class="text-lg sm:text-xl font-bold text-blue-900 flex items-center gap-2">
+          <span class="w-2 h-6 bg-blue-800 rounded-full"></span>
+          任務一：反手推、正手攻 1 分鐘對打測驗等級量表
+        </h2>
+      </div>
+
+      <!-- 測驗方式與動作要領說明框 -->
+      <div class="bg-blue-50/80 border-l-4 border-blue-700 p-4 rounded-r-xl text-sm text-slate-700 space-y-2 mb-5">
+        <p class="leading-relaxed">
+          <strong class="text-blue-950">測驗方式：</strong>同儕兩人對打，教師計時一分鐘，計算兩人來回擊球累計次數，反手推、正手攻各測驗 5-10 次，測驗過程中可自由換不同的同儕對打。測驗時間結束以最佳成績回報。
+        </p>
+        <div class="pt-1 border-t border-blue-200/70">
+          <p class="font-bold text-blue-950 mb-1">教師另以觀察的方式給予學生動作要領的正確性加 0-10 分，教師觀察標準參考如下：</p>
+          <ul class="space-y-1 text-slate-800">
+            <li>◎ <strong>反手推：</strong>屈膝彎腰、拍面對球 - 向前推臂</li>
+            <li>◎ <strong>正手攻：</strong>屈膝彎腰、身體向後引拍 - 重心轉移向前、收動前臂</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 成績輸入與自動等級判定表格 -->
+      <div class="overflow-x-auto mb-5">
+        <table class="w-full border-collapse border border-slate-300 text-center text-sm sm:text-base">
+          <thead>
+            <tr class="bg-slate-100 text-slate-800">
+              <th class="border border-slate-300 py-3 px-2 w-1/5">測驗項目</th>
+              <th class="border border-slate-300 py-3 px-2 w-1/4">最高連續次數</th>
+              <th class="border border-slate-300 py-3 px-2 w-1/3">一分鐘次數 (最佳成績)</th>
+              <th class="border border-slate-300 py-3 px-2">自動等級</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="border border-slate-300 py-3 px-2 font-bold bg-slate-50">反手推</td>
+              <td class="border border-slate-300 p-2">
+                <input type="number" id="bhMax" min="0" placeholder="次數" required
+                  class="w-full text-center py-2 px-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none">
+              </td>
+              <td class="border border-slate-300 p-2">
+                <input type="number" id="bhMin" min="0" placeholder="輸入後自動判定" oninput="calcGrades()" required
+                  class="w-full text-center py-2 px-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-bold text-blue-900">
+              </td>
+              <td class="border border-slate-300 p-2">
+                <span id="bhGradeDisplay" class="inline-block min-w-[3.2rem] py-1 px-3 rounded-full font-black text-sm bg-slate-200 text-slate-600">-</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="border border-slate-300 py-3 px-2 font-bold bg-slate-50">正手攻</td>
+              <td class="border border-slate-300 p-2">
+                <input type="number" id="fhMax" min="0" placeholder="次數" required
+                  class="w-full text-center py-2 px-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none">
+              </td>
+              <td class="border border-slate-300 p-2">
+                <input type="number" id="fhMin" min="0" placeholder="輸入後自動判定" oninput="calcGrades()" required
+                  class="w-full text-center py-2 px-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-bold text-blue-900">
+              </td>
+              <td class="border border-slate-300 p-2">
+                <span id="fhGradeDisplay" class="inline-block min-w-[3.2rem] py-1 px-3 rounded-full font-black text-sm bg-slate-200 text-slate-600">-</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 教師觀察加分欄位 -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200 mb-5">
+        <label for="actionScore" class="font-bold text-slate-800 text-sm sm:text-base">
+          教師觀察動作要領正確性加分 (0 - 10 分)：
+        </label>
+        <div class="flex items-center gap-2">
+          <input type="number" id="actionScore" min="0" max="10" value="0"
+            class="w-24 text-center py-2 px-3 border border-slate-300 rounded-lg font-bold text-blue-900 focus:ring-2 focus:ring-blue-600 outline-none">
+          <span class="text-sm text-slate-600 font-medium">分</span>
+        </div>
+      </div>
+
+      <!-- 等級對照參考表 -->
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse border border-slate-300 text-center text-xs sm:text-sm">
+          <thead>
+            <tr class="bg-slate-100 text-slate-700">
+              <th class="border border-slate-300 py-2 px-2 w-1/5">等級對照標準</th>
+              <th class="border border-slate-300 py-2 px-2 text-emerald-700 font-black">A+</th>
+              <th class="border border-slate-300 py-2 px-2 text-blue-700 font-black">A</th>
+              <th class="border border-slate-300 py-2 px-2 text-indigo-700 font-black">B+</th>
+              <th class="border border-slate-300 py-2 px-2 text-amber-700 font-black">B</th>
+              <th class="border border-slate-300 py-2 px-2 text-slate-600 font-black">C</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="border border-slate-300 py-2 px-2 bg-slate-50 font-bold">反手推次數等級</th>
+              <td class="border border-slate-300 py-2 px-1">40-50 以上</td>
+              <td class="border border-slate-300 py-2 px-1">30-39</td>
+              <td class="border border-slate-300 py-2 px-1">20-29</td>
+              <td class="border border-slate-300 py-2 px-1">10-19</td>
+              <td class="border border-slate-300 py-2 px-1">10 以下</td>
+            </tr>
+            <tr>
+              <th class="border border-slate-300 py-2 px-2 bg-slate-50 font-bold">正手攻次數等級</th>
+              <td class="border border-slate-300 py-2 px-1">30-40 以上</td>
+              <td class="border border-slate-300 py-2 px-1">20-29</td>
+              <td class="border border-slate-300 py-2 px-1">11-19</td>
+              <td class="border border-slate-300 py-2 px-1">5-10</td>
+              <td class="border border-slate-300 py-2 px-1">5 以下</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 任務二：正反手發球（含發下旋球） -->
+    <section class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <h2 class="text-lg sm:text-xl font-bold text-emerald-900 flex items-center gap-2">
+          <span class="w-2 h-6 bg-emerald-700 rounded-full"></span>
+          任務二：正反手發球（含發下旋球）
+        </h2>
+        <button type="button" onclick="quickFillServeA()" class="text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold px-3 py-1.5 rounded-lg transition">
+          ⚡ 快捷全選「A 卓越」
+        </button>
+      </div>
+
+      <!-- 動作檢核表 -->
+      <div class="overflow-x-auto mb-6">
+        <table class="w-full border-collapse border border-slate-300 text-sm sm:text-base">
+          <thead>
+            <tr class="bg-slate-100 text-slate-800">
+              <th class="border border-slate-300 py-2.5 px-2 w-24 sm:w-32 text-center">動作階段</th>
+              <th class="border border-slate-300 py-2.5 px-3 text-left">動作內容</th>
+              <th class="border border-slate-300 py-2.5 px-2 w-16 sm:w-20 text-center text-emerald-800">A 卓越</th>
+              <th class="border border-slate-300 py-2.5 px-2 w-16 sm:w-20 text-center text-amber-700">B 尚可</th>
+              <th class="border border-slate-300 py-2.5 px-2 w-16 sm:w-20 text-center text-rose-700">C 待加強</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- 預備姿勢 -->
+            <tr>
+              <td rowspan="3" class="border border-slate-300 p-2 text-center font-bold bg-slate-50">
+                預備姿勢<br><span class="text-xs text-slate-500 font-normal">(掌上明珠)</span>
+              </td>
+              <td class="border border-slate-300 py-2.5 px-3">球置於掌心上，胸前 30 公分處</td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s1" value="A" required></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s1" value="B"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s1" value="C"></td>
+            </tr>
+            <tr>
+              <td class="border border-slate-300 py-2.5 px-3">雙腳與肩同寬，前後開立</td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s2" value="A" required></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s2" value="B"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s2" value="C"></td>
+            </tr>
+            <tr>
+              <td class="border border-slate-300 py-2.5 px-3">兩眼注視對方站立位置</td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s3" value="A" required></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s3" value="B"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s3" value="C"></td>
+            </tr>
+
+            <!-- 拋球和擊球動作 -->
+            <tr>
+              <td rowspan="3" class="border border-slate-300 p-2 text-center font-bold bg-slate-50">
+                拋球和<br>擊球動作
+              </td>
+              <td class="border border-slate-300 py-2.5 px-3">將球拋高 16 公分以上</td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s4" value="A" required></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s4" value="B"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s4" value="C"></td>
+            </tr>
+            <tr>
+              <td class="border border-slate-300 py-2.5 px-3">擊球時拍面斜 45 度向前</td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s5" value="A" required></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s5" value="B"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s5" value="C"></td>
+            </tr>
+            <tr>
+              <td class="border border-slate-300 py-2.5 px-3">球的第一落點，落在己方桌面近端線處</td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s6" value="A" required></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s6" value="B"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s6" value="C"></td>
+            </tr>
+
+            <!-- 結束動作 -->
+            <tr>
+              <td rowspan="2" class="border border-slate-300 p-2 text-center font-bold bg-slate-50">
+                結束動作
+              </td>
+              <td class="border border-slate-300 py-2.5 px-3">揮拍至左（右）肩前上方</td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s7" value="A" required></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s7" value="B"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s7" value="C"></td>
+            </tr>
+            <tr>
+              <td class="border border-slate-300 py-2.5 px-3">恢復接球姿勢</td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s8" value="A" required></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s8" value="B"></td>
+              <td class="border border-slate-300 text-center"><input type="radio" name="s8" value="C"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 互動式發球落點計分區 -->
+      <div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+          <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+            🎯 發球落點計分區
+            <span class="text-xs font-normal text-slate-600">(直接點擊球桌對應落點累計分數)</span>
+          </h3>
+        </div>
+
+        <!-- 球桌視覺化容器 -->
+        <div class="pingpong-court-container flex justify-center my-3">
+          <div class="pingpong-court">
+            <!-- 對手半場 (落點計分網格) -->
+            <div class="receiver-side" aria-label="對手半場落點計分區">
+              <button type="button" class="zone-btn z-tl-10" onclick="addServe(10, this)">10</button>
+              <button type="button" class="zone-btn z-tm-8"  onclick="addServe(8, this)">8</button>
+              <button type="button" class="zone-btn z-tm-7"  onclick="addServe(7, this)">7</button>
+              <button type="button" class="zone-btn z-tr-10" onclick="addServe(10, this)">10</button>
+
+              <button type="button" class="zone-btn z-ml-9"  onclick="addServe(9, this)">9</button>
+              <button type="button" class="zone-btn z-ml-8"  onclick="addServe(8, this)">8</button>
+              <button type="button" class="zone-btn z-mm-6"  onclick="addServe(6, this)">6</button>
+              <button type="button" class="zone-btn z-mr-8"  onclick="addServe(8, this)">8</button>
+              <button type="button" class="zone-btn z-mr-9"  onclick="addServe(9, this)">9</button>
+
+              <button type="button" class="zone-btn z-bl-10" onclick="addServe(10, this)">10</button>
+              <button type="button" class="zone-btn z-bm-7"  onclick="addServe(7, this)">7</button>
+              <button type="button" class="zone-btn z-bm-8"  onclick="addServe(8, this)">8</button>
+              <button type="button" class="zone-btn z-br-10" onclick="addServe(10, this)">10</button>
+            </div>
+
+            <!-- 白色球網 -->
+            <div class="net-line" title="球網"></div>
+
+            <!-- 發球者半場 -->
+            <div class="server-side">
+              <div class="server-box">發球者</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 計分統計與操作列 -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-3">
+          <div class="space-y-1">
+            <div class="text-sm text-slate-700">
+              <strong>已紀錄球數 (<span id="serveCount" class="text-blue-700 font-black">0</span> 球)：</strong>
+              <span id="serveHistory" class="text-emerald-700 font-bold break-all">尚未點擊球桌</span>
+            </div>
+            <div class="text-base text-slate-900">
+              <strong>發球落點總分：</strong>
+              <span id="serveTotal" class="text-2xl font-black text-rose-600">0</span> <span class="text-sm font-bold">分</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <button type="button" onclick="undoServe()"
+              class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-sm rounded-xl border border-slate-300 transition">
+              ↩ 復原上一球
+            </button>
+            <button type="button" onclick="resetServe()"
+              class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-sm rounded-xl border border-rose-200 transition">
+              🗑 清空重計
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 送出按鈕 -->
+    <button type="submit" id="submitBtn"
+      class="w-full py-4 px-6 bg-blue-800 hover:bg-blue-900 active:scale-[0.99] text-white font-black text-lg rounded-2xl shadow-lg shadow-blue-900/20 transition cursor-pointer">
+      📤 送出測驗成績至雲端
+    </button>
+  </form>
+</div>
+
+<!-- 預覽模式送出結果確認視窗 (Modal) -->
+<div id="previewModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-fade-in">
+    <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+      <h3 class="text-lg font-black text-blue-900 flex items-center gap-2">
+        ✅ 預覽送出成功（模擬資料摘要）
+      </h3>
+      <button type="button" onclick="closeModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold px-2">&times;</button>
+    </div>
+
+    <div id="modalContent" class="text-sm text-slate-700 space-y-2 max-h-[60vh] overflow-y-auto bg-slate-50 p-4 rounded-xl border border-slate-200">
+      <!-- 動態填入摘要內容 -->
+    </div>
+
+    <div class="mt-4 bg-amber-50 border border-amber-200 text-amber-900 text-xs p-3 rounded-xl">
+      <strong>💡 正式上線說明：</strong>當您將程式碼貼至 GitHub 並填入 Google Apps Script 網址後，點擊送出就會直接把上方資料寫入您的 Google Sheet 試算表中！
+    </div>
+
+    <div class="mt-5 flex justify-end gap-2">
+      <button type="button" onclick="closeModalAndReset()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl text-sm transition">
+        清空表單繼續測試
+      </button>
+      <button type="button" onclick="closeModal()" class="px-5 py-2 bg-blue-800 hover:bg-blue-900 text-white font-bold rounded-xl text-sm transition">
+        確認關閉
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let serveScores = [];
+
+  // 即時計算反手推、正手攻等級與徽章顏色
+  function calcGrades() {
+    const bhVal = document.getElementById("bhMin").value;
+    const fhVal = document.getElementById("fhMin").value;
+
+    const bhBadge = document.getElementById("bhGradeDisplay");
+    if (bhVal === "" || isNaN(parseInt(bhVal))) {
+      bhBadge.innerText = "-";
+      bhBadge.className = "inline-block min-w-[3.2rem] py-1 px-3 rounded-full font-black text-sm bg-slate-200 text-slate-600";
+    } else {
+      const bh = parseInt(bhVal);
+      let grade = "C";
+      if (bh >= 40) grade = "A+";
+      else if (bh >= 30) grade = "A";
+      else if (bh >= 20) grade = "B+";
+      else if (bh >= 10) grade = "B";
+      bhBadge.innerText = grade;
+      bhBadge.className = getBadgeStyle(grade);
+    }
+
+    const fhBadge = document.getElementById("fhGradeDisplay");
+    if (fhVal === "" || isNaN(parseInt(fhVal))) {
+      fhBadge.innerText = "-";
+      fhBadge.className = "inline-block min-w-[3.2rem] py-1 px-3 rounded-full font-black text-sm bg-slate-200 text-slate-600";
+    } else {
+      const fh = parseInt(fhVal);
+      let grade = "C";
+      if (fh >= 30) grade = "A+";
+      else if (fh >= 20) grade = "A";
+      else if (fh >= 11) grade = "B+";
+      else if (fh >= 5) grade = "B";
+      fhBadge.innerText = grade;
+      fhBadge.className = getBadgeStyle(grade);
+    }
+  }
+
+  function getBadgeStyle(grade) {
+    const base = "inline-block min-w-[3.2rem] py-1 px-3 rounded-full font-black text-sm ";
+    switch (grade) {
+      case "A+": return base + "bg-emerald-100 text-emerald-800 border border-emerald-300";
+      case "A":  return base + "bg-blue-100 text-blue-800 border border-blue-300";
+      case "B+": return base + "bg-indigo-100 text-indigo-800 border border-indigo-300";
+      case "B":  return base + "bg-amber-100 text-amber-800 border border-amber-300";
+      default:   return base + "bg-slate-200 text-slate-700 border border-slate-300";
+    }
+  }
+
+  // 發球落點點擊計分
+  function addServe(pts, btnEl) {
+    serveScores.push(pts);
+    updateServeUI();
+    if (btnEl) {
+      btnEl.classList.add("zone-hit");
+      setTimeout(() => btnEl.classList.remove("zone-hit"), 150);
+    }
+  }
+
+  function undoServe() {
+    if (serveScores.length > 0) {
+      serveScores.pop();
+      updateServeUI();
+    }
+  }
+
+  function resetServe() {
+    serveScores = [];
+    updateServeUI();
+  }
+
+  function updateServeUI() {
+    document.getElementById("serveCount").innerText = serveScores.length;
+    document.getElementById("serveHistory").innerText =
+      serveScores.length > 0 ? serveScores.join(" + ") : "尚未點擊球桌";
+    const total = serveScores.reduce((a, b) => a + b, 0);
+    document.getElementById("serveTotal").innerText = total;
+  }
+
+  // 快捷填寫發球動作全選 A（方便老師預覽測試）
+  function quickFillServeA() {
+    for (let i = 1; i <= 8; i++) {
+      const radio = document.querySelector(`input[name="s${i}"][value="A"]`);
+      if (radio) radio.checked = true;
+    }
+  }
+
+  // 預覽模式表單送出
+  document.getElementById("examForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const getRadio = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value || "-";
+    const serveChecks = [
+      getRadio("s1"), getRadio("s2"), getRadio("s3"), getRadio("s4"),
+      getRadio("s5"), getRadio("s6"), getRadio("s7"), getRadio("s8")
+    ];
+
+    const data = {
+      studentId: document.getElementById("studentId").value.trim(),
+      studentName: document.getElementById("studentName").value.trim(),
+      recorderName: document.getElementById("recorderName").value.trim(),
+      bhMax: document.getElementById("bhMax").value,
+      bhMin: document.getElementById("bhMin").value,
+      bhGrade: document.getElementById("bhGradeDisplay").innerText,
+      fhMax: document.getElementById("fhMax").value,
+      fhMin: document.getElementById("fhMin").value,
+      fhGrade: document.getElementById("fhGradeDisplay").innerText,
+      actionScore: document.getElementById("actionScore").value || "0",
+      serveChecks: serveChecks.join(" / "),
+      serveCount: serveScores.length,
+      serveDetails: serveScores.length > 0 ? serveScores.join(", ") : "無",
+      serveTotal: serveScores.reduce((a, b) => a + b, 0)
+    };
+
+    document.getElementById("modalContent").innerHTML = `
+      <div class="grid grid-cols-2 gap-2 pb-2 border-b border-slate-200">
+        <div><strong>班級座號：</strong>${escapeHtml(data.studentId)}</div>
+        <div><strong>受測者：</strong>${escapeHtml(data.studentName)}</div>
+        <div class="col-span-2"><strong>紀錄者：</strong>${escapeHtml(data.recorderName)}</div>
+      </div>
+      <div class="py-2 border-b border-slate-200 space-y-1">
+        <div class="font-bold text-blue-900">【任務一：1分鐘對打測驗】</div>
+        <div>• 反手推：最高連續 <strong>${data.bhMax}</strong> 次 / 1分鐘 <strong>${data.bhMin}</strong> 次 → 等級 <span class="font-black text-blue-700">${data.bhGrade}</span></div>
+        <div>• 正手攻：最高連續 <strong>${data.fhMax}</strong> 次 / 1分鐘 <strong>${data.fhMin}</strong> 次 → 等級 <span class="font-black text-blue-700">${data.fhGrade}</span></div>
+        <div>• 教師動作觀察加分：<strong>${data.actionScore}</strong> 分</div>
+      </div>
+      <div class="pt-1 space-y-1">
+        <div class="font-bold text-emerald-900">【任務二：正反手發球】</div>
+        <div>• 8項動作檢核結果：<strong>${data.serveChecks}</strong></div>
+        <div>• 落點明細 (${data.serveCount}球)：${data.serveDetails}</div>
+        <div>• 發球落點總分：<strong class="text-rose-600 text-base">${data.serveTotal} 分</strong></div>
+      </div>
+    `;
+
+    const modal = document.getElementById("previewModal");
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+  });
+
+  function closeModal() {
+    const modal = document.getElementById("previewModal");
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+  }
+
+  function closeModalAndReset() {
+    document.getElementById("examForm").reset();
+    resetServe();
+    calcGrades();
+    closeModal();
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+  }
+</script>
+</body>
+</html>
