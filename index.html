@@ -151,21 +151,22 @@
         <span class="w-2 h-6 bg-blue-800 rounded-full"></span>
         基本資料登錄
       </h2>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label for="studentId" class="block text-sm font-bold text-slate-700 mb-1">班級座號 <span class="text-red-500">*</span></label>
-          <input type="text" id="studentId" placeholder="例：80105" required
-            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition">
+          <label for="studentSelect" class="block text-sm font-bold text-slate-700 mb-1">受測者（學號 / 姓名） <span class="text-red-500">*</span></label>
+          <select id="studentSelect" required
+            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition font-medium text-slate-800">
+            <option value="" disabled selected>-- 請選擇受測同學 --</option>
+          </select>
         </div>
         <div>
-          <label for="studentName" class="block text-sm font-bold text-slate-700 mb-1">受測者姓名 <span class="text-red-500">*</span></label>
-          <input type="text" id="studentName" placeholder="請輸入受測學生姓名" required
-            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition">
-        </div>
-        <div>
-          <label for="recorderName" class="block text-sm font-bold text-slate-700 mb-1">紀錄者姓名 <span class="text-red-500">*</span></label>
-          <input type="text" id="recorderName" placeholder="請輸入同儕或教師姓名" required
-            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition">
+          <label for="recorderSelect" class="block text-sm font-bold text-slate-700 mb-1">紀錄者（同學 / 教師） <span class="text-red-500">*</span></label>
+          <select id="recorderSelect" onchange="toggleCustomRecorder()" required
+            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition font-medium text-slate-800">
+            <option value="" disabled selected>-- 請選擇紀錄者 --</option>
+          </select>
+          <input type="text" id="customRecorderInput" placeholder="請手動輸入紀錄者姓名"
+            class="hidden mt-2 w-full px-3.5 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition text-sm">
         </div>
       </div>
     </section>
@@ -481,6 +482,92 @@
 </div>
 
 <script>
+  // ⚠️ 若要正式寫入 Google Sheets，請將下方引號內的網址替換為您的 Google Apps Script 部署網址
+  const SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
+
+  // 學生名單資料庫
+  const STUDENT_ROSTER = [
+    { id: "1144826", name: "蔡O恩" },
+    { id: "1154171", name: "讓O昀" },
+    { id: "1154172", name: "黃O諾" },
+    { id: "1154173", name: "邱O龍" },
+    { id: "1154174", name: "羅O翔" },
+    { id: "1154175", name: "林O謙" },
+    { id: "1154176", name: "魏O澐" },
+    { id: "1154177", name: "高O程" },
+    { id: "1154178", name: "羅O涵" },
+    { id: "1154180", name: "洪O喜" },
+    { id: "1154181", name: "王O誠" },
+    { id: "1154182", name: "劉O怡" },
+    { id: "1154183", name: "許O量" },
+    { id: "1154184", name: "盧O綜" },
+    { id: "1154185", name: "黃O睿" },
+    { id: "1154187", name: "張O媛" },
+    { id: "1154188", name: "陳O妡" },
+    { id: "1154189", name: "楊O皓" },
+    { id: "1154190", name: "楊O安" },
+    { id: "1154191", name: "許O婷" },
+    { id: "1154192", name: "許O珈" },
+    { id: "1154193", name: "鄭O忻" },
+    { id: "1154194", name: "龍O偵" },
+    { id: "1154195", name: "孫O陳" },
+    { id: "1154196", name: "張O宸" },
+    { id: "1154197", name: "林O彤" },
+    { id: "1154198", name: "邱O豪" },
+    { id: "1154199", name: "李O" },
+    { id: "1154200", name: "葉O妍" },
+    { id: "1154201", name: "李O成" }
+  ];
+
+  // 初始化下拉式選單
+  function initDropdowns() {
+    const studentSelect = document.getElementById("studentSelect");
+    const recorderSelect = document.getElementById("recorderSelect");
+
+    STUDENT_ROSTER.forEach(student => {
+      const label = `${student.id} ${student.name}`;
+      const value = `${student.id}|${student.name}`;
+
+      const opt1 = document.createElement("option");
+      opt1.value = value;
+      opt1.textContent = label;
+      studentSelect.appendChild(opt1);
+
+      const opt2 = document.createElement("option");
+      opt2.value = label;
+      opt2.textContent = label;
+      recorderSelect.appendChild(opt2);
+    });
+
+    // 紀錄者額外增加「授課教師」與「其他（手動輸入）」選項
+    const teacherOpt = document.createElement("option");
+    teacherOpt.value = "授課教師";
+    teacherOpt.textContent = "👨‍🏫 授課教師";
+    recorderSelect.appendChild(teacherOpt);
+
+    const otherOpt = document.createElement("option");
+    otherOpt.value = "__CUSTOM__";
+    otherOpt.textContent = "✏️ 其他（手動輸入姓名）";
+    recorderSelect.appendChild(otherOpt);
+  }
+
+  // 切換自訂紀錄者輸入框
+  function toggleCustomRecorder() {
+    const recorderSelect = document.getElementById("recorderSelect");
+    const customInput = document.getElementById("customRecorderInput");
+    if (recorderSelect.value === "__CUSTOM__") {
+      customInput.classList.remove("hidden");
+      customInput.required = true;
+      customInput.focus();
+    } else {
+      customInput.classList.add("hidden");
+      customInput.required = false;
+      customInput.value = "";
+    }
+  }
+
+  initDropdowns();
+
   let serveScores = [];
 
   // 即時計算反手推、正手攻等級與徽章顏色
@@ -519,6 +606,7 @@
     }
   }
 
+  // 依據等級回傳對應徽章顏色樣式
   function getBadgeStyle(grade) {
     const base = "inline-block min-w-[3.2rem] py-1 px-3 rounded-full font-black text-sm ";
     switch (grade) {
@@ -526,25 +614,31 @@
       case "A":  return base + "bg-blue-100 text-blue-800 border border-blue-300";
       case "B+": return base + "bg-indigo-100 text-indigo-800 border border-indigo-300";
       case "B":  return base + "bg-amber-100 text-amber-800 border border-amber-300";
-      default:   return base + "bg-slate-200 text-slate-700 border border-slate-300";
+      default:   return base + "bg-slate-200 text-slate-700";
     }
   }
 
-  // 發球落點點擊計分
-  function addServe(pts, btnEl) {
-    serveScores.push(pts);
-    updateServeUI();
-    if (btnEl) {
-      btnEl.classList.add("zone-hit");
-      setTimeout(() => btnEl.classList.remove("zone-hit"), 150);
+  // 快捷全選「A 卓越」
+  function quickFillServeA() {
+    for (let i = 1; i <= 8; i++) {
+      const radioA = document.querySelector(`input[name="s${i}"][value="A"]`);
+      if (radioA) radioA.checked = true;
     }
+  }
+
+  // 發球落點點擊計分與視覺回饋
+  function addServe(pts, btnElement) {
+    serveScores.push(pts);
+    if (btnElement) {
+      btnElement.classList.add("zone-hit");
+      setTimeout(() => btnElement.classList.remove("zone-hit"), 180);
+    }
+    updateServeUI();
   }
 
   function undoServe() {
-    if (serveScores.length > 0) {
-      serveScores.pop();
-      updateServeUI();
-    }
+    serveScores.pop();
+    updateServeUI();
   }
 
   function resetServe() {
@@ -554,23 +648,24 @@
 
   function updateServeUI() {
     document.getElementById("serveCount").innerText = serveScores.length;
-    document.getElementById("serveHistory").innerText =
-      serveScores.length > 0 ? serveScores.join(" + ") : "尚未點擊球桌";
+    document.getElementById("serveHistory").innerText = serveScores.length > 0 ? serveScores.join(" + ") : "尚未點擊球桌";
     const total = serveScores.reduce((a, b) => a + b, 0);
     document.getElementById("serveTotal").innerText = total;
   }
 
-  // 快捷填寫發球動作全選 A（方便老師預覽測試）
-  function quickFillServeA() {
-    for (let i = 1; i <= 8; i++) {
-      const radio = document.querySelector(`input[name="s${i}"][value="A"]`);
-      if (radio) radio.checked = true;
-    }
-  }
-
-  // 預覽模式表單送出
+  // 預覽與雲端表單送出
   document.getElementById("examForm").addEventListener("submit", function(e) {
     e.preventDefault();
+
+    // 解析受測者學號與姓名
+    const studentVal = document.getElementById("studentSelect").value;
+    const [studentId, studentName] = studentVal ? studentVal.split("|") : ["", ""];
+
+    // 解析紀錄者姓名
+    const recorderSelectVal = document.getElementById("recorderSelect").value;
+    const recorderName = recorderSelectVal === "__CUSTOM__"
+      ? document.getElementById("customRecorderInput").value.trim()
+      : recorderSelectVal;
 
     const getRadio = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value || "-";
     const serveChecks = [
@@ -578,10 +673,10 @@
       getRadio("s5"), getRadio("s6"), getRadio("s7"), getRadio("s8")
     ];
 
-    const data = {
-      studentId: document.getElementById("studentId").value.trim(),
-      studentName: document.getElementById("studentName").value.trim(),
-      recorderName: document.getElementById("recorderName").value.trim(),
+    const payload = {
+      studentId: studentId,
+      studentName: studentName,
+      recorderName: recorderName,
       bhMax: document.getElementById("bhMax").value,
       bhMin: document.getElementById("bhMin").value,
       bhGrade: document.getElementById("bhGradeDisplay").innerText,
@@ -589,35 +684,76 @@
       fhMin: document.getElementById("fhMin").value,
       fhGrade: document.getElementById("fhGradeDisplay").innerText,
       actionScore: document.getElementById("actionScore").value || "0",
-      serveChecks: serveChecks.join(" / "),
-      serveCount: serveScores.length,
+      s1: serveChecks[0],
+      s2: serveChecks[1],
+      s3: serveChecks[2],
+      s4: serveChecks[3],
+      s5: serveChecks[4],
+      s6: serveChecks[5],
+      s7: serveChecks[6],
+      s8: serveChecks[7],
       serveDetails: serveScores.length > 0 ? serveScores.join(", ") : "無",
       serveTotal: serveScores.reduce((a, b) => a + b, 0)
     };
 
-    document.getElementById("modalContent").innerHTML = `
-      <div class="grid grid-cols-2 gap-2 pb-2 border-b border-slate-200">
-        <div><strong>班級座號：</strong>${escapeHtml(data.studentId)}</div>
-        <div><strong>受測者：</strong>${escapeHtml(data.studentName)}</div>
-        <div class="col-span-2"><strong>紀錄者：</strong>${escapeHtml(data.recorderName)}</div>
-      </div>
-      <div class="py-2 border-b border-slate-200 space-y-1">
-        <div class="font-bold text-blue-900">【任務一：1分鐘對打測驗】</div>
-        <div>• 反手推：最高連續 <strong>${data.bhMax}</strong> 次 / 1分鐘 <strong>${data.bhMin}</strong> 次 → 等級 <span class="font-black text-blue-700">${data.bhGrade}</span></div>
-        <div>• 正手攻：最高連續 <strong>${data.fhMax}</strong> 次 / 1分鐘 <strong>${data.fhMin}</strong> 次 → 等級 <span class="font-black text-blue-700">${data.fhGrade}</span></div>
-        <div>• 教師動作觀察加分：<strong>${data.actionScore}</strong> 分</div>
-      </div>
-      <div class="pt-1 space-y-1">
-        <div class="font-bold text-emerald-900">【任務二：正反手發球】</div>
-        <div>• 8項動作檢核結果：<strong>${data.serveChecks}</strong></div>
-        <div>• 落點明細 (${data.serveCount}球)：${data.serveDetails}</div>
-        <div>• 發球落點總分：<strong class="text-rose-600 text-base">${data.serveTotal} 分</strong></div>
-      </div>
-    `;
+    const showSummaryModal = (isCloudSent) => {
+      const modalTitle = document.querySelector("#previewModal h3");
+      modalTitle.innerHTML = isCloudSent
+        ? "✅ 測驗成績已成功傳送至雲端！"
+        : "✅ 預覽送出成功（模擬資料摘要）";
 
-    const modal = document.getElementById("previewModal");
-    modal.classList.remove("hidden");
-    modal.classList.add("flex");
+      document.getElementById("modalContent").innerHTML = `
+        <div class="grid grid-cols-2 gap-2 pb-2 border-b border-slate-200">
+          <div><strong>學號：</strong>${escapeHtml(payload.studentId)}</div>
+          <div><strong>受測者：</strong>${escapeHtml(payload.studentName)}</div>
+          <div class="col-span-2"><strong>紀錄者：</strong>${escapeHtml(payload.recorderName)}</div>
+        </div>
+        <div class="py-2 border-b border-slate-200 space-y-1">
+          <div class="font-bold text-blue-900">【任務一：1分鐘對打測驗】</div>
+          <div>• 反手推：最高連續 <strong>${payload.bhMax}</strong> 次 / 1分鐘 <strong>${payload.bhMin}</strong> 次 → 等級 <span class="font-black text-blue-700">${payload.bhGrade}</span></div>
+          <div>• 正手攻：最高連續 <strong>${payload.fhMax}</strong> 次 / 1分鐘 <strong>${payload.fhMin}</strong> 次 → 等級 <span class="font-black text-blue-700">${payload.fhGrade}</span></div>
+          <div>• 教師動作觀察加分：<strong>${payload.actionScore}</strong> 分</div>
+        </div>
+        <div class="pt-1 space-y-1">
+          <div class="font-bold text-emerald-900">【任務二：正反手發球】</div>
+          <div>• 8項動作檢核結果：<strong>${serveChecks.join(" / ")}</strong></div>
+          <div>• 落點明細 (${serveScores.length}球)：${payload.serveDetails}</div>
+          <div>• 發球落點總分：<strong class="text-rose-600 text-base">${payload.serveTotal} 分</strong></div>
+        </div>
+      `;
+
+      const modal = document.getElementById("previewModal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    };
+
+    // 若尚未設定 Google Apps Script 網址，顯示預覽摘要視窗
+    if (SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
+      showSummaryModal(false);
+      return;
+    }
+
+    // 正式傳送至 Google Sheets
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    btn.innerText = "⏳ 資料傳送中，請稍候...";
+
+    fetch(SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+    .then(() => {
+      showSummaryModal(true);
+    })
+    .catch(err => {
+      console.error("傳送失敗：", err);
+    })
+    .finally(() => {
+      btn.disabled = false;
+      btn.innerText = "📤 送出測驗成績至雲端";
+    });
   });
 
   function closeModal() {
@@ -628,6 +764,7 @@
 
   function closeModalAndReset() {
     document.getElementById("examForm").reset();
+    toggleCustomRecorder();
     resetServe();
     calcGrades();
     closeModal();
